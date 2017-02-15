@@ -1,0 +1,80 @@
+#!/usr/bin/python
+import os
+import glob
+import ntpath
+import sys
+import argparse
+import subprocess
+from Bio import SearchIO
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from Bio import BiopythonWarning
+
+def runHmmer(args, list_path):
+	if not os.path.exists(args.out):
+		os.makedirs(args.out)
+	f = open(list_path,'w')
+	for filename in glob.iglob(args.fasta + '*.fasta'):
+		print('processing: %s' % filename)
+		basename = os.path.splitext(str(ntpath.basename(str(filename))))[0]
+		# find ORF in fasta files
+		exportpath = str(args.out) + ntpath.basename(str(filename))
+		hmmpath = str(args.out) + ntpath.basename(str(filename)) + '.out'
+
+		s = " "
+		cmd = ("prodigal -i",  str(filename), "-a", exportpath, '-d /dev/null > /dev/null 2> /dev/null')
+		try:
+			os.system(s.join( cmd ))
+		except OSError, e:
+			sys.exit("Error running 'prodigal'. Please check if this binary is in your $PATH")
+		# run hmmsearch on faa ORF files
+		s = " "
+		cmd = ("hmmsearch --domtblout", hmmpath, args.hmm, exportpath, '> /dev/null 2> /dev/null')
+		try:
+			os.system(s.join( cmd ))
+		except OSError, e:
+			sys.exit("Error running 'hmmsearch'. Please check if this binary is in your $PATH")
+		# parse domtblout and save it as csv
+		with open(hmmpath, 'rU') as input:
+			for qresult in SearchIO.parse(input, 'hmmscan3-domtab'):
+				query_id = qresult.id
+				hits = qresult.hits
+				num_hits = len(hits)
+				acc = qresult.accession
+				f.write(''.join((basename, '\t', str(acc),'\t', str(num_hits), '\n')))
+	f.close()
+
+def drawHeat(filename):
+	df = pd.read_table(filename, header=None)
+	df.columns = ['file', 'name','num']
+	df = df.pivot_table(index = 'name', columns = 'file', values = 'num', aggfunc = min)
+	# plot heatmap
+	ax = sns.heatmap(df, cmap="Greys")
+	ax.set_title('number of HMM matches')
+	ax.set_xlabel('')
+	ax.set_ylabel('')
+	# turn the axis label
+	for item in ax.get_yticklabels():
+		item.set_rotation(0)
+	for item in ax.get_xticklabels():
+		item.set_rotation(90)
+	plt.tight_layout()
+	plt.savefig('heatmap.png', dpi=300)
+	plt.savefig("heatmap.pdf", bbox_inches='tight')
+	plt.show()
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--hmm', action='store', dest='hmm',
+						help='path to hmm file', default='example/example.hmm')
+	parser.add_argument('--fasta_dir', action='store', dest='fasta',
+						help='path to folder where .fasta files are located', default='example/faa/')
+	parser.add_argument('--output_dir', action='store', dest='out',
+						help='path to output folder', default='output/')
+	parser.add_argument('--version', action='version', version='%(prog)s 0.1')
+	args = parser.parse_args()
+
+	runHmmer(args, args.out + str('hits_list.csv'))
+	drawHeat(args.out + str('hits_list.csv'))
