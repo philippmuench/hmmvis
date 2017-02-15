@@ -4,7 +4,7 @@ Just a simple tool to check if some HMM profiles are present in a bunch of fasta
 
 ```
 usage: hmmvis [-h] [--hmm HMM] [--fasta_dir FASTA] [--output_dir OUT]
-              [--use_query] [--colorful] [--version]
+              [--use_query] [--colorful] [--normalize] [--version]
 
 optional arguments:
   -h, --help         show this help message and exit
@@ -13,6 +13,7 @@ optional arguments:
   --output_dir OUT   path to output folder
   --use_query        use query id insead of accession
   --colorful         use colors for heatmap
+  --normalize        normalize cluster map
   --version          show program's version number and exit
 ```
 
@@ -20,6 +21,8 @@ e.g. ` hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa/ --use_qu
 
 # output
 ![alt text](heatmap.png "example heatmap")
+
+![alt text](cluster.png "example clustermap")
 
 # installation
 
