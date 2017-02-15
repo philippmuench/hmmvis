@@ -43,7 +43,10 @@ def runHmmer(args, list_path):
 				hits = qresult.hits
 				num_hits = len(hits)
 				acc = qresult.accession
-				f.write(''.join((basename, '\t', str(acc),'\t', str(num_hits), '\n')))
+				if args.query:
+					f.write(''.join((basename, '\t', str(query_id),'\t', str(num_hits), '\n')))
+				else:
+					f.write(''.join((basename, '\t', str(acc),'\t', str(num_hits), '\n')))
 	f.close()
 
 def drawHeat(filename):
@@ -51,7 +54,10 @@ def drawHeat(filename):
 	df.columns = ['file', 'name','num']
 	df = df.pivot_table(index = 'name', columns = 'file', values = 'num', aggfunc = min)
 	# plot heatmap
-	ax = sns.heatmap(df, cmap="Greys")
+	if args.colorful:
+		ax = sns.heatmap(df, cmap="YlOrRd")
+	else:
+		ax = sns.heatmap(df, cmap="Greys")
 	ax.set_title('number of HMM matches')
 	ax.set_xlabel('')
 	ax.set_ylabel('')
@@ -73,6 +79,10 @@ if __name__ == "__main__":
 						help='path to folder where .fasta files are located', default='example/faa/')
 	parser.add_argument('--output_dir', action='store', dest='out',
 						help='path to output folder', default='output/')
+	parser.add_argument('--use_query', action='store_true', dest='query',
+						help='use query id insead of accession')
+	parser.add_argument('--colorful', action='store_true', dest='colorful',
+						help='use colors for heatmap')
 	parser.add_argument('--version', action='version', version='%(prog)s 0.1')
 	args = parser.parse_args()
 

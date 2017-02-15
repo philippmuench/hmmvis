@@ -4,18 +4,19 @@ Just a simple tool to check if some HMM profiles are present in a bunch of fasta
 
 ```
 usage: hmmvis [-h] [--hmm HMM] [--fasta_dir FASTA] [--output_dir OUT]
-              [--version]
+              [--use_query] [--colorful] [--version]
 
 optional arguments:
   -h, --help         show this help message and exit
   --hmm HMM          path to hmm file
   --fasta_dir FASTA  path to folder where .fasta files are located
   --output_dir OUT   path to output folder
+  --use_query        use query id insead of accession
+  --colorful         use colors for heatmap
   --version          show program's version number and exit
-
 ```
 
-e.g. ` hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa/`
+e.g. ` hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa/ --use_query --colorful`
 
 # output
 ![alt text](heatmap.png "example heatmap")
