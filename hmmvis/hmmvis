@@ -53,9 +53,11 @@ def drawHeat(filename):
 	df = pd.read_table(filename, header=None)
 	df.columns = ['file', 'name','num']
 	df = df.pivot_table(index = 'name', columns = 'file', values = 'num', aggfunc = min)
+	df = df.fillna(0)
 	# plot heatmap
 	if args.colorful:
 		ax = sns.heatmap(df, cmap="YlOrRd")
+#		ax = sns.clustermap(df)
 	else:
 		ax = sns.heatmap(df, cmap="Greys")
 	ax.set_title('number of HMM matches')
@@ -86,5 +88,5 @@ if __name__ == "__main__":
 	parser.add_argument('--version', action='version', version='%(prog)s 0.1')
 	args = parser.parse_args()
 
-	runHmmer(args, args.out + str('hits_list.csv'))
+#	runHmmer(args, args.out + str('hits_list.csv'))
 	drawHeat(args.out + str('hits_list.csv'))
