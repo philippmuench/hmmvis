@@ -1,7 +1,8 @@
+Just a simple tool to check if some HMM profiles are present in a bunch of fasta files.
+
 # usuage
 
 ```
->hmmvis/hmmvis -h
 usage: hmmvis [-h] [--hmm HMM] [--fasta_dir FASTA] [--output_dir OUT]
               [--version]
 
