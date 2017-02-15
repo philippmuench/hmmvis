@@ -29,6 +29,10 @@ python setup.py install
 
 you also need dependencies: `prodigal` and `hmmer` and want to use `virtualenv`
 
+# licence
+GNU General Public License, version 3 (GPL-3.0)
+
+
 # cite
 this script is part of the PlasmidMiner toolkit. If you use this script please cite:
 
