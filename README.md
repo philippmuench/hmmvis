@@ -1,4 +1,4 @@
-Just a simple tool to check if some HMM profiles are present in a bunch of fasta files.
+Just a simple tool to check if some HMM profiles are present in a bunch of fasta files. You can put input fasta files into subfolders to visualize groups in the heatmap.
 
 # usuage
 
@@ -9,7 +9,8 @@ usage: hmmvis [-h] [--hmm HMM] [--fasta_dir FASTA] [--output_dir OUT]
 optional arguments:
   -h, --help         show this help message and exit
   --hmm HMM          path to hmm file
-  --fasta_dir FASTA  path to folder where .fasta files are located
+  --fasta_dir FASTA  path to folder where .fasta files are located (fasta
+                     files can be grouped within subfolder)
   --output_dir OUT   path to output folder
   --use_query        use query id insead of accession
   --colorful         use colors for heatmap
@@ -20,6 +21,9 @@ optional arguments:
 e.g. ` hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa/ --use_query --colorful`
 
 # output
+if the input files are located within subfolders, it will visualized as grouping:
+![alt text](cluster_grouped.png "example clustermap grouped")
+
 ![alt text](heatmap.png "example heatmap")
 
 ![alt text](cluster.png "example clustermap")
