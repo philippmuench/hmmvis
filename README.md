@@ -1,24 +1,38 @@
-Just a simple tool to check if some HMM profiles are present in a bunch of fasta files.
+Just a simple tool to check if some HMM profiles are present in a bunch of fasta files. You can put input fasta files into subfolders to visualize groups in the heatmap.
 
 # usuage
 
 ```
 usage: hmmvis [-h] [--hmm HMM] [--fasta_dir FASTA] [--output_dir OUT]
-              [--version]
+              [--use_query] [--colorful] [--normalize] [--version]
 
 optional arguments:
   -h, --help         show this help message and exit
   --hmm HMM          path to hmm file
-  --fasta_dir FASTA  path to folder where .fasta files are located
+  --fasta_dir FASTA  path to folder where .fasta files are located (fasta
+                     files can be grouped within subfolder)
   --output_dir OUT   path to output folder
+  --use_query        use query id insead of accession
+  --colorful         use colors for heatmap
+  --normalize        normalize cluster map
   --version          show program's version number and exit
-
 ```
 
-e.g. ` hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa/`
 
 # output
+## automatic grouping of input fasta files
+
+`hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa_grouped --use_query --colorful`
+
+![alt text](cluster_grouped.png "example clustermap grouped")
+
+## without grouping
+
+`hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa --use_query --colorful`
+
 ![alt text](heatmap.png "example heatmap")
+
+![alt text](cluster.png "example clustermap")
 
 # installation
 
@@ -28,11 +42,12 @@ cd hmmvis
 python setup.py install
 ```
 
-you also need dependencies: `prodigal` and `hmmer` and want to use `virtualenv`
+you also need dependencies: 
+- `prodigal`
+- `hmmer`
 
 # licence
 GNU General Public License, version 3 (GPL-3.0)
-
 
 # cite
 this script is part of the PlasmidMiner toolkit. If you use this script please cite:

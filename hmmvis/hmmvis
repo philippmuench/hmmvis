@@ -10,48 +10,76 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from Bio import BiopythonWarning
+from sklearn import preprocessing
 
-def runHmmer(args, list_path):
-	if not os.path.exists(args.out):
+def loopfiles(args, list_path):
+	# create output dir
+	if not os.path.exists(str(args.out)):
 		os.makedirs(args.out)
+	# open output file
 	f = open(list_path,'w')
-	for filename in glob.iglob(args.fasta + '*.fasta'):
-		print('processing: %s' % filename)
-		basename = os.path.splitext(str(ntpath.basename(str(filename))))[0]
-		# find ORF in fasta files
-		exportpath = str(args.out) + ntpath.basename(str(filename))
-		hmmpath = str(args.out) + ntpath.basename(str(filename)) + '.out'
+	# check if files are provided
+	fastalist = filter(os.path.isfile, glob.glob(str(args.fasta) +'/*.fasta'))
+	if not fastalist:
+		sys.stderr.write("No fasta files found.\n")
+		# walk through subdirs
+		path, subdirs, files = os.walk(str(args.fasta))
+		if not files:
+			sys.stderr.write("No files in subdirectory found.\n")
+			exit(1)
+		else:
+			print("Subdirectories found.")
+			# subdirs are present, list the fasta files found in subdirs
+			for path, subdirs, files in os.walk(str(args.fasta)):
+				for filename in files:
+					fasta_file = os.path.join(path, filename)
+					print fasta_file
+					runHmmer(args, list_path, fasta_file, f)
+			f.close()
+		#exit(1)
+	else:
+		# we have fasta files without subfolders
+		for filename in fastalist:
+			runHmmer(args, list_path, filename, f)
+		f.close()
 
-		s = " "
-		cmd = ("prodigal -i",  str(filename), "-a", exportpath, '-d /dev/null > /dev/null 2> /dev/null')
-		try:
-			os.system(s.join( cmd ))
-		except OSError, e:
-			sys.exit("Error running 'prodigal'. Please check if this binary is in your $PATH")
-		# run hmmsearch on faa ORF files
-		s = " "
-		cmd = ("hmmsearch --domtblout", hmmpath, args.hmm, exportpath, '> /dev/null 2> /dev/null')
-		try:
-			os.system(s.join( cmd ))
-		except OSError, e:
-			sys.exit("Error running 'hmmsearch'. Please check if this binary is in your $PATH")
-		# parse domtblout and save it as csv
-		with open(hmmpath, 'rU') as input:
-			for qresult in SearchIO.parse(input, 'hmmscan3-domtab'):
-				query_id = qresult.id
-				hits = qresult.hits
-				num_hits = len(hits)
-				acc = qresult.accession
-				f.write(''.join((basename, '\t', str(acc),'\t', str(num_hits), '\n')))
-	f.close()
+def runHmmer(args, list_path, file_path, f):
+	# get the sample group
+	head, group = os.path.split(os.path.split(file_path)[0])
+	basename = os.path.splitext(str(ntpath.basename(str(file_path))))[0]
+	exportpath = str(args.out) + ntpath.basename(str(file_path))
+	hmmpath = str(args.out) + ntpath.basename(str(file_path)) + '.out'
+	print('Processing %s of group %s' % (basename, group))
+	s = " "
+	cmd = ("prodigal -p meta -i",  str(file_path), "-a", exportpath, '-d /dev/null > /dev/null 2> /dev/null')
+	os.system(s.join( cmd ))
+	# run hmmsearch on faa ORF files
+	s = " "
+	cmd = ("hmmsearch -E 0.001 --domtblout", hmmpath, args.hmm, exportpath, '> /dev/null 2> /dev/null')
+	os.system(s.join( cmd ))
+	# parse domtblout and save it as csv
+	with open(hmmpath, 'rU') as input:
+		for qresult in SearchIO.parse(input, 'hmmscan3-domtab'):
+			query_id = qresult.id
+			hits = qresult.hits
+			num_hits = len(hits)
+			acc = qresult.accession
+			if args.query:
+				f.write(''.join((basename, '\t', str(query_id),'\t', str(num_hits),'\t', str(group), '\n')))
+			else:
+				f.write(''.join((basename, '\t', str(acc),'\t', str(num_hits), '\t', str(group),'\n')))
 
-def drawHeat(filename):
+def drawHeat(filename, args):
 	df = pd.read_table(filename, header=None)
-	df.columns = ['file', 'name','num']
+	df.columns = ['file', 'name','num', 'group']
+	df.drop('group', axis=1)
 	df = df.pivot_table(index = 'name', columns = 'file', values = 'num', aggfunc = min)
+	df = df.fillna(0)
 	# plot heatmap
-	ax = sns.heatmap(df, cmap="Greys")
+	if args.colorful:
+		ax = sns.heatmap(df, cmap="YlOrRd")
+	else:
+		ax = sns.heatmap(df, cmap="Greys")
 	ax.set_title('number of HMM matches')
 	ax.set_xlabel('')
 	ax.set_ylabel('')
@@ -65,16 +93,81 @@ def drawHeat(filename):
 	plt.savefig("heatmap.pdf", bbox_inches='tight')
 	plt.show()
 
+def drawCluster(filename, args):
+	df = pd.read_table(filename, header=None)
+	df.columns = ['file', 'name','num','group']
+
+	if pd.unique(df['group']).size >= 2:
+		# more than one group is present
+		df_group = df.pivot_table(index = 'file', values = 'group', aggfunc = max)
+		df_group = pd.DataFrame(data=df_group)
+		df_group = df_group.rename_axis(None)
+		df_group.columns = ['group']
+		df2 = df.pivot_table(index = 'name', columns = 'file', values = 'num', aggfunc = max)
+		df2 = df2.fillna(0)
+		df2 = df2.rename_axis(None)
+		df2 = df2.T
+		df2 = df2.rename_axis(None)
+		merged = pd.merge(df_group,df2,left_index=True,right_index=True)
+		# encode labels
+		le = preprocessing.LabelEncoder()
+		le.fit(merged['group'])
+		merged['group'] = le.transform(merged['group'])
+		# convert labels to numeric
+		merged['group'] = merged['group'].apply(pd.to_numeric)
+		# color palette with the same number of colors as unique values in the group column
+		group_pal = sns.light_palette('blue', len(merged.group.unique()))
+		# dictionary where the key is the category and the values are the colors from the palette
+		group_lut = dict(zip(merged.group.unique(), group_pal))
+		# get the series of all of the categories
+		group = merged.group
+		# map the colors to the series
+		merged.drop('group', axis=1, inplace=True)
+		group_colors = pd.Series(group).map(group_lut)
+		ax = sns.clustermap(merged, row_colors=group_colors, cmap='YlOrRd')
+		plt.setp(ax.ax_heatmap.get_yticklabels(), rotation=0)
+		plt.setp(ax.ax_heatmap.get_xticklabels(), rotation=90)
+		plt.savefig('cluster.png', bbox_inches='tight')
+		plt.savefig("cluster.pdf", bbox_inches='tight')
+		plt.show()
+
+	else:
+		# no groups are present
+		df.drop('group', axis=1)
+		df = df.pivot_table(index = 'name', columns = 'file', values = 'num', aggfunc = min)
+		df = df.fillna(0)
+
+		if args.normalize:
+			ax = sns.clustermap(df, col_cluster=False, cmap='YlOrRd', linewidths=0, z_score=1)
+		else:
+			ax = sns.clustermap(df, col_cluster=False, cmap='YlOrRd', linewidths=0)
+		plt.setp(ax.ax_heatmap.get_yticklabels(), rotation=0)  # For y axis
+		plt.setp(ax.ax_heatmap.get_xticklabels(), rotation=90) # For x axis
+		plt.savefig('cluster.png', bbox_inches='tight')
+		plt.savefig("cluster.pdf", bbox_inches='tight')
+		plt.show()
+
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--hmm', action='store', dest='hmm',
 						help='path to hmm file', default='example/example.hmm')
 	parser.add_argument('--fasta_dir', action='store', dest='fasta',
-						help='path to folder where .fasta files are located', default='example/faa/')
+						help='path to folder where .fasta files are located (fasta files can be grouped within subfolder)', default='example/faa')
 	parser.add_argument('--output_dir', action='store', dest='out',
 						help='path to output folder', default='output/')
+	parser.add_argument('--use_query', action='store_true', dest='query',
+						help='use query id insead of accession')
+	parser.add_argument('--colorful', action='store_true', dest='colorful',
+						help='use colors for heatmap')
+	parser.add_argument('--normalize', action='store_true', dest='normalize',
+						help='normalize cluster map')
+
 	parser.add_argument('--version', action='version', version='%(prog)s 0.1')
 	args = parser.parse_args()
 
-	runHmmer(args, args.out + str('hits_list.csv'))
-	drawHeat(args.out + str('hits_list.csv'))
+	# start looping thorugh the files and run prodigal and hmmer to create the csv file
+	loopfiles(args, args.out + str('hits_list.csv'))
+	# use csv file to produce heatmap
+	drawHeat(args.out + str('hits_list.csv'), args)
+	# produce heatmap with dendogram
+	drawCluster(args.out + str('hits_list.csv'), args)
