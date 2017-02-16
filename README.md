@@ -18,11 +18,17 @@ optional arguments:
   --version          show program's version number and exit
 ```
 
-e.g. ` hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa/ --use_query --colorful`
 
 # output
-if the input files are located within subfolders, it will visualized as grouping:
+## automatic grouping of input fasta files
+
+`hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa_grouped --use_query --colorful`
+
 ![alt text](cluster_grouped.png "example clustermap grouped")
+
+## without grouping
+
+`hmmvis/hmmvis --hmm example/example.hmm --fasta_dir example/faa --use_query --colorful`
 
 ![alt text](heatmap.png "example heatmap")
 
@@ -36,11 +42,12 @@ cd hmmvis
 python setup.py install
 ```
 
-you also need dependencies: `prodigal` and `hmmer` and want to use `virtualenv`
+you also need dependencies: 
+- `prodigal`
+- `hmmer`
 
 # licence
 GNU General Public License, version 3 (GPL-3.0)
-
 
 # cite
 this script is part of the PlasmidMiner toolkit. If you use this script please cite:
