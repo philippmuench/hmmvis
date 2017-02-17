@@ -130,9 +130,9 @@ def drawCluster(filename, args):
 		merged.drop('group', axis=1, inplace=True)
 		group_colors = pd.Series(group).map(group_lut)
 		if args.keeporder:
-			ax = sns.clustermap(merged, row_colors=group_colors, cmap='YlOrRd', row_cluster=False, linewidths=0, yticklabels=False)
+			ax = sns.clustermap(merged, row_colors=group_colors, cmap='YlOrRd', row_cluster=False, linewidths=0, yticklabels=True)
 		else:
-			ax = sns.clustermap(merged, row_colors=group_colors, cmap='YlOrRd', row_cluster=False, linewidths=0, yticklabels=False)
+			ax = sns.clustermap(merged, row_colors=group_colors, cmap='YlOrRd', row_cluster=False, linewidths=0, yticklabels=True)
 		plt.setp(ax.ax_heatmap.get_yticklabels(), rotation=0)
 		plt.setp(ax.ax_heatmap.get_xticklabels(), rotation=90)
 		plt.savefig('cluster.png', bbox_inches='tight')
@@ -176,8 +176,8 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 
 	# start looping thorugh the files and run prodigal and hmmer to create the csv file
-#	loopfiles(args, args.out + str('hits_list.csv'))
+	loopfiles(args, args.out + str('hits_list.csv'))
 	# use csv file to produce heatmap
-#	drawHeat(args.out + str('hits_list.csv'), args)
+	drawHeat(args.out + str('hits_list.csv'), args)
 	# produce heatmap with dendogram
 	drawCluster(args.out + str('hits_list.csv'), args)
