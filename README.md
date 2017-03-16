@@ -38,6 +38,15 @@ optional arguments:
 
 # installation
 
+install dependencies
+```
+sudo apt-get install python python-setuptools libblas-dev liblapack-dev gfortran libpython2.7-dev python-numpy
+wget https://bootstrap.pypa.io/get-pip.py
+python get-pip.py
+pip install numpy # see bug https://github.com/scikit-learn/scikit-learn/issues/4164
+```
+
+install hmmvis
 ```
 git clone https://github.com/philippmuench/hmmvis.git
 cd hmmvis
