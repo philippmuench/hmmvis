@@ -48,10 +48,14 @@ def runHmmer(args, list_path, file_path, f):
 	head, group = os.path.split(os.path.split(file_path)[0])
 	basename = os.path.splitext(str(ntpath.basename(str(file_path))))[0]
 	exportpath = str(args.out) + ntpath.basename(str(file_path))
+	locpath = str(args.out) + ntpath.basename(str(file_path)) + '.loc'
 	hmmpath = str(args.out) + ntpath.basename(str(file_path)) + '.out'
 	print('Processing %s of group %s' % (basename, group))
 	s = " "
 	cmd = ("prodigal -p meta -i",  str(file_path), "-a", exportpath, '-d /dev/null > /dev/null 2> /dev/null')
+	os.system(s.join( cmd ))
+	# export ORF locations
+	cmd = ("prodigal -p meta -i",  str(file_path), "-f sco -o", locpath, '-d /dev/null > /dev/null 2> /dev/null')
 	os.system(s.join( cmd ))
 	# run hmmsearch on faa ORF files
 	s = " "
