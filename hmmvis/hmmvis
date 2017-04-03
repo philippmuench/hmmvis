@@ -59,7 +59,7 @@ def runHmmer(args, list_path, file_path, f):
 	os.system(s.join( cmd ))
 	# run hmmsearch on faa ORF files
 	s = " "
-	cmd = ("hmmsearch -E 0.001 --domtblout", hmmpath, args.hmm, exportpath, '> /dev/null 2> /dev/null')
+	cmd = ("hmmsearch -E 0.0001 --domtblout", hmmpath, args.hmm, exportpath, '> /dev/null 2> /dev/null')
 	os.system(s.join( cmd ))
 	#print(s.join( cmd ))
 	# parse domtblout and save it as csv
